@@ -1,11 +1,6 @@
-# Build dynamic library by default
-DYNAMIC_LIB ?= 1
-# Build static library by default
-STATIC_LIB ?= 1
-# Run tests by default
-TESTS ?= 1
+# Static library is always built; set DYNAMIC_LIB=1 to also build the shared one
+DYNAMIC_LIB ?= 0
 
-UNAME = $(shell sh -c 'uname -s 2>/dev/null || echo not')
 DESTDIR =
 PREFIX = /usr/local
 
@@ -21,24 +16,18 @@ ARFLAGS = rcs
 DEBUG = -g
 OPTIM = -O3
 override CFLAGS += $(DEBUG) $(OPTIM) -Wall -std=c99 -pedantic -Wformat-security -Wno-format-zero-length -Werror -Wwrite-strings -Wformat -fdiagnostics-show-option -Wextra -Wsign-compare -Wcast-align -Wno-unused-parameter
-override LDFLAGS += -shared
-override LIBPATH += -L.
-
-ifeq ($(UNAME),Darwin)
-override LDFLAGS += -Wl,-install_name,$(LIB).$(MAJOR).$(MINOR)
-else
-override LDFLAGS += -Wl,-soname,$(LIB).$(MAJOR).$(MINOR)
+override LDFLAGS += -shared -Wl,-soname,$(LIB).$(MAJOR).$(MINOR)
 LIBS = -lcrypt
-endif
 
+TARGET_LIBS = $(LIB_STATIC)
 ifeq (1,$(DYNAMIC_LIB))
 TARGET_LIBS += $(LIB)
 endif
-ifeq (1,$(STATIC_LIB))
-TARGET_LIBS += $(LIB_STATIC)
-endif
 
-all: $(TARGET_LIBS) $(if $(filter 1,$(TESTS)),clitest)
+all: $(TARGET_LIBS) clitest
+
+$(LIB_STATIC): libcli.o
+	$(AR) $(ARFLAGS) $@ $^
 
 $(LIB): libcli.o
 	$(CC) -o $(LIB).$(MAJOR).$(MINOR).$(REVISION) $^ $(LDFLAGS) $(LIBS)
@@ -46,16 +35,13 @@ $(LIB): libcli.o
 	ln -s $(LIB).$(MAJOR).$(MINOR).$(REVISION) $(LIB).$(MAJOR).$(MINOR)
 	ln -s $(LIB).$(MAJOR).$(MINOR) $(LIB)
 
-$(LIB_STATIC): libcli.o
-	$(AR) $(ARFLAGS) $@ $^
-
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -o $@ -c $<
 
 libcli.o: libcli.h
 
-clitest: clitest.o $(LIB)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< -L. -lcli
+clitest: clitest.o $(LIB_STATIC)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 # Test driver for the Perl suite in t/.  libcli.c is compiled in directly so
 # the sanitizers instrument the library too.
@@ -68,53 +54,21 @@ t/cli_driver: t/cli_driver.c libcli.c libcli.h
 test: t/cli_driver
 	prove -r t/
 
-# Non-sanitized driver for valgrind (ASan and valgrind cannot coexist).
-t/cli_driver_plain: t/cli_driver.c libcli.c libcli.h
-	$(CC) $(CPPFLAGS) -g -O0 -I. -std=c99 -pedantic -Wall -Wextra \
-		-Wno-unused-parameter -o $@ t/cli_driver.c libcli.c $(LIBS)
-
-test-valgrind: t/cli_driver_plain
-	LIBCLI_DRIVER=t/cli_driver_plain LIBCLI_VALGRIND=1 prove -r t/
-
-clitest.exe: clitest.c libcli.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< libcli.o -lws2_32
+lint:
+	clang-tidy -quiet -warnings-as-errors *.c *.h
 
 clean:
-	rm -f *.o $(LIB)* $(LIB_STATIC) clitest t/cli_driver t/cli_driver_plain libcli-$(MAJOR).$(MINOR).$(REVISION).tar.gz
+	rm -f *.o $(LIB)* $(LIB_STATIC) clitest t/cli_driver
 
 install: $(TARGET_LIBS)
 	install -d $(DESTDIR)$(PREFIX)/include $(DESTDIR)$(PREFIX)/lib
 	install -m 0644 libcli.h $(DESTDIR)$(PREFIX)/include
-  ifeq (1,$(STATIC_LIB))
 	install -m 0644 $(LIB_STATIC) $(DESTDIR)$(PREFIX)/lib
-  endif
-  ifeq (1,$(DYNAMIC_LIB))
+ifeq (1,$(DYNAMIC_LIB))
 	install -m 0755 $(LIB).$(MAJOR).$(MINOR).$(REVISION) $(DESTDIR)$(PREFIX)/lib
 	cd $(DESTDIR)$(PREFIX)/lib && \
 	    ln -fs $(LIB).$(MAJOR).$(MINOR).$(REVISION) $(LIB).$(MAJOR).$(MINOR) && \
 	    ln -fs $(LIB).$(MAJOR).$(MINOR) $(LIB)
-  endif
+endif
 
-rpmprep:
-	rm -rf libcli-$(MAJOR).$(MINOR).$(REVISION)
-	mkdir libcli-$(MAJOR).$(MINOR).$(REVISION)
-	cp -R libcli.c libcli.h libcli.spec clitest.c Makefile COPYING README.md doc libcli-$(MAJOR).$(MINOR).$(REVISION)
-	tar zcvf libcli-$(MAJOR).$(MINOR).$(REVISION).tar.gz --exclude CVS --exclude *.tar.gz libcli-$(MAJOR).$(MINOR).$(REVISION)
-	rm -rf libcli-$(MAJOR).$(MINOR).$(REVISION)
-
-rpm: rpmprep
-	rpmbuild -ta libcli-$(MAJOR).$(MINOR).$(REVISION).tar.gz --define "debug_package %{nil}" --clean
-
-lint:
-	clang-tidy -quiet -warnings-as-errors *.c *.h
-
-uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/include/libcli.h
-  ifeq (1,$(STATIC_LIB))
-	rm -f $(DESTDIR)$(PREFIX)/lib/$(LIB_STATIC)
-  endif
-  ifeq (1,$(DYNAMIC_LIB))
-	rm -f $(DESTDIR)$(PREFIX)/lib/$(LIB).$(MAJOR).$(MINOR).$(REVISION)
-	rm -f $(DESTDIR)$(PREFIX)/lib/$(LIB).$(MAJOR).$(MINOR)
-	rm -f $(DESTDIR)$(PREFIX)/lib/$(LIB)
-  endif
+.PHONY: all test lint clean install
