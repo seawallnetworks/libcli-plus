@@ -4,16 +4,19 @@ Data-driven tests for libcli, in the style of
 [Test::Nginx](https://metacpan.org/dist/Test-Nginx). Each test is a block
 of text describing input to type into a running CLI session and the
 output to expect back. The library is compiled directly into a small C
-driver built with sanitizers, so memory and undefined-behaviour errors
-turn into test failures.
+driver; built with sanitizers (`USE_ASAN=1`) or run under valgrind,
+memory and undefined-behaviour errors turn into test failures.
 
 ## Running
 
-    make test            # AddressSanitizer + UndefinedBehaviorSanitizer
+    make test              # plain driver
+    USE_ASAN=1 make test   # AddressSanitizer + UndefinedBehaviorSanitizer
 
-`make test` builds `t/cli_driver` with `-fsanitize=address,undefined` and
-runs `prove -r t/`. The same blocks can also be run under valgrind; see
-[valgrind mode](#valgrind-mode).
+`make test` builds `t/cli_driver` and runs `prove -r t/`. With
+`USE_ASAN=1` the driver is built with `-fsanitize=address,undefined`.
+The driver is not rebuilt when only `USE_ASAN` changes, so `rm
+t/cli_driver` (or `make clean`) when switching. The same blocks can also
+be run under valgrind; see [valgrind mode](#valgrind-mode).
 
 Run one file verbosely:
 
@@ -156,14 +159,12 @@ Current known-bug blocks:
 ## valgrind mode
 
 Set `LIBCLI_VALGRIND=1` to run every block under Memcheck. ASan and
-valgrind cannot share a binary, so build a non-sanitized driver first and
-point `LIBCLI_DRIVER` at it:
+valgrind cannot share a binary, so use the default (non-ASan) driver:
 
-    gcc -g -O0 -I. -std=c99 -o t/cli_driver_plain t/cli_driver.c libcli.c -lcrypt
-    LIBCLI_DRIVER=t/cli_driver_plain LIBCLI_VALGRIND=1 prove -r t/
+    make t/cli_driver
+    LIBCLI_VALGRIND=1 prove -r t/
 
-Memcheck catches two
-things the ASan build does not: reads of uninitialized memory, and leaks
+Memcheck catches two things the ASan build does not: reads of uninitialized memory, and leaks
 (the ASan build runs with `detect_leaks=0`). Each block's timeout is
 scaled up automatically because Memcheck is ~20–30x slower.
 
@@ -176,6 +177,6 @@ libcli.c:270).
 
 ## CI
 
-`make test` is suitable for every push (seconds). The valgrind run
+`USE_ASAN=1 make test` is suitable for every push (seconds). The valgrind run
 suits a nightly or pre-release job. Both need `libtest-base-perl`;
 valgrind additionally needs the `valgrind` package.

@@ -49,9 +49,9 @@ my $Driver = $ENV{LIBCLI_DRIVER} || 't/cli_driver';
 $ENV{ASAN_OPTIONS}  ||= 'detect_leaks=0';
 $ENV{UBSAN_OPTIONS} ||= 'print_stacktrace=1';
 
-# With LIBCLI_VALGRIND set, each driver run is wrapped in Memcheck.  Use
-# a non-sanitized driver for this (ASan and valgrind cannot coexist) by
-# pointing LIBCLI_DRIVER at it; see "valgrind mode" in t/README.md.  This
+# With LIBCLI_VALGRIND set, each driver run is wrapped in Memcheck.  The
+# driver must be built without USE_ASAN (ASan and valgrind cannot
+# coexist); see "valgrind mode" in t/README.md.  This
 # catches uninitialized-memory reads and leaks that ASan does not.
 my @Valgrind = $ENV{LIBCLI_VALGRIND}
     ? ('valgrind', '-q', '--error-exitcode=99', '--leak-check=full',

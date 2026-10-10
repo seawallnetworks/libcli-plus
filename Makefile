@@ -1,5 +1,7 @@
 # Static library is always built; set DYNAMIC_LIB=1 to also build the shared one
 DYNAMIC_LIB ?= 0
+# Set USE_ASAN=1 to build t/cli_driver with AddressSanitizer + UBSan
+USE_ASAN ?=
 
 DESTDIR =
 PREFIX = /usr/local
@@ -44,9 +46,11 @@ clitest: clitest.o $(LIB_STATIC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 # Test driver for the Perl suite in t/.  libcli.c is compiled in directly so
-# the sanitizers instrument the library too.
-TEST_CFLAGS = -g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined \
-	-Wall -std=c99 -pedantic -Werror -Wextra -Wno-unused-parameter
+# that, with USE_ASAN, the sanitizers instrument the library too.
+TEST_CFLAGS = -g -O0 -Wall -std=c99 -pedantic -Werror -Wextra -Wno-unused-parameter
+ifneq ($(USE_ASAN),)
+TEST_CFLAGS += -fno-omit-frame-pointer -fsanitize=address,undefined
+endif
 
 t/cli_driver: t/cli_driver.c libcli.c libcli.h
 	$(CC) $(CPPFLAGS) $(TEST_CFLAGS) -I. -o $@ t/cli_driver.c libcli.c $(LIBS)
