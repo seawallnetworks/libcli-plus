@@ -4,3 +4,6 @@
 *.so.*
 clitest
 compile_commands.json
+t/cli_driver
+*~
+t/cli_driver_plain

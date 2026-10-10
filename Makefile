@@ -57,11 +57,30 @@ libcli.o: libcli.h
 clitest: clitest.o $(LIB)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< -L. -lcli
 
+# Test driver for the Perl suite in t/.  libcli.c is compiled in directly so
+# the sanitizers instrument the library too.
+TEST_CFLAGS = -g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined \
+	-Wall -std=c99 -pedantic -Werror -Wextra -Wno-unused-parameter
+
+t/cli_driver: t/cli_driver.c libcli.c libcli.h
+	$(CC) $(CPPFLAGS) $(TEST_CFLAGS) -I. -o $@ t/cli_driver.c libcli.c $(LIBS)
+
+test: t/cli_driver
+	prove -r t/
+
+# Non-sanitized driver for valgrind (ASan and valgrind cannot coexist).
+t/cli_driver_plain: t/cli_driver.c libcli.c libcli.h
+	$(CC) $(CPPFLAGS) -g -O0 -I. -std=c99 -pedantic -Wall -Wextra \
+		-Wno-unused-parameter -o $@ t/cli_driver.c libcli.c $(LIBS)
+
+test-valgrind: t/cli_driver_plain
+	LIBCLI_DRIVER=t/cli_driver_plain LIBCLI_VALGRIND=1 prove -r t/
+
 clitest.exe: clitest.c libcli.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< libcli.o -lws2_32
 
 clean:
-	rm -f *.o $(LIB)* $(LIB_STATIC) clitest libcli-$(MAJOR).$(MINOR).$(REVISION).tar.gz
+	rm -f *.o $(LIB)* $(LIB_STATIC) clitest t/cli_driver t/cli_driver_plain libcli-$(MAJOR).$(MINOR).$(REVISION).tar.gz
 
 install: $(TARGET_LIBS)
 	install -d $(DESTDIR)$(PREFIX)/include $(DESTDIR)$(PREFIX)/lib
