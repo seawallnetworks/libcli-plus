@@ -161,7 +161,7 @@ Current known-bug blocks:
 Set `LIBCLI_VALGRIND=1` to run every block under Memcheck. ASan and
 valgrind cannot share a binary, so use the default (non-ASan) driver:
 
-    make t/cli_driver
+    make
     LIBCLI_VALGRIND=1 prove -r t/
 
 Memcheck catches two things the ASan build does not: reads of uninitialized memory, and leaks

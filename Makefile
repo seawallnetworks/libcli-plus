@@ -26,7 +26,7 @@ ifeq (1,$(DYNAMIC_LIB))
 TARGET_LIBS += $(LIB)
 endif
 
-all: $(TARGET_LIBS) clitest
+all: $(TARGET_LIBS) clitest t/cli_driver
 
 $(LIB_STATIC): libcli.o
 	$(AR) $(ARFLAGS) $@ $^
