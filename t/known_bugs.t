@@ -1,10 +1,10 @@
 use lib 't/lib';
 use Test::LibCLI;
 
-# Known, unfixed bugs that do not belong to a single topical test file.
-# Each block is marked SKIP so the suite stays green; drop the "--- SKIP"
-# line (and the "(KNOWN BUG ...)" note) as part of the fix to turn the
-# block into a live regression test.
+# Bugs that do not belong to a single topical test file.  Unfixed ones
+# are marked SKIP so the suite stays green; drop the "--- SKIP" line (and
+# the "(KNOWN BUG ...)" note) as part of the fix to turn the block into a
+# live regression test.
 run_tests();
 
 __DATA__
@@ -28,3 +28,13 @@ counters
 ^RAN show version$
 --- output_unlike
 Invalid command "ZZZshow"
+
+
+
+=== TEST 3: registering a duplicate optarg leaves a usable cli
+--- fixture: dupoptarg
+--- input
+set hello
+--- output_like
+^RAN set$
+^OPTARG name=hello$
