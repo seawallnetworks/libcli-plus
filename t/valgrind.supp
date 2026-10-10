@@ -1,4 +1,4 @@
-# Valgrind (Memcheck) suppressions for "make test-valgrind".
+# Valgrind (Memcheck) suppressions for the valgrind test run (see t/README.md).
 #
 # This file baselines KNOWN, pre-existing leaks so the valgrind gate can
 # still catch NEW ones.  Each entry names the bug it hides; remove the
