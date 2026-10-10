@@ -149,7 +149,6 @@ Current known-bug blocks:
 | Block | libcli.c | Symptom |
 |-------|----------|---------|
 | completion.t "overflow near line limit" | 1472 | tab-completion heap overflow |
-| completion.t "failed buildmode entry" | 1781 | NULL deref after freed buildmode |
 | basic.t "password may contain '?'" | 1544 | `?` swallowed in password states |
 | basic.t "password mid-line edit" | 1358 | cursor moved without compacting buffer |
 | known_bugs.t "unregister child" | 476 | parent `children` dangles (use-after-free) |

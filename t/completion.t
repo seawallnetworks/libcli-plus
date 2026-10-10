@@ -100,11 +100,11 @@ set hello
 
 
 
-=== TEST 11: a failed buildmode entry does not crash the cli (KNOWN BUG libcli.c:1781)
---- SKIP
+=== TEST 11: a failed buildmode entry does not crash the cli
 --- fixture: buildmode
 --- input
 build go
 ping
 --- output_like
+^Failure entering build mode for 'build go'$
 ^RAN ping$

@@ -1777,9 +1777,8 @@ int cli_loop(struct cli_def *cli, int sockfd) {
       rc = cli_run_command(cli, cmd);
       switch (rc) {
         case CLI_BUILDMODE_ERROR:
-          // Unable to enter buildmode successfully
-          cli_print(cli, "Failure entering build mode for '%s'", cli->buildmode->cname);
-          cli_int_free_buildmode(cli);
+          // Unable to enter buildmode successfully; cli_int_enter_buildmode() has already freed cli->buildmode
+          cli_print(cli, "Failure entering build mode for '%s'", cmd);
           continue;
         case CLI_BUILDMODE_CANCEL:
           // Called if user enters 'cancel'
