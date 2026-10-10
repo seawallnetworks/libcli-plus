@@ -148,7 +148,6 @@ Current known-bug blocks:
 
 | Block | libcli.c | Symptom |
 |-------|----------|---------|
-| completion.t "duplicate optarg" | 2279 | `cli_free_optarg(NULL)` crash |
 | completion.t "overflow near line limit" | 1472 | tab-completion heap overflow |
 | completion.t "failed buildmode entry" | 1781 | NULL deref after freed buildmode |
 | basic.t "password may contain '?'" | 1544 | `?` swallowed in password states |

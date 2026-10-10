@@ -82,8 +82,7 @@ paint ?
 
 
 
-=== TEST 9: registering a duplicate optarg leaves a usable cli (KNOWN BUG libcli.c:2279)
---- SKIP
+=== TEST 9: registering a duplicate optarg leaves a usable cli
 --- fixture: dupoptarg
 --- input
 set hello
