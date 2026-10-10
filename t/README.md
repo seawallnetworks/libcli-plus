@@ -37,7 +37,7 @@ Requires Perl with `Test::Base` (Debian/Ubuntu: `libtest-base-perl`).
       editing.t          line-editing keys (ctrl-a/e/b/f/k/w/u/z, backspace, insert)
       filters.t          include/exclude/count/begin/between/grep/egrep
       completion.t       tab and '?' completion, validators
-      known_bugs.t       cross-cutting known-bug blocks (all SKIP)
+      known_bugs.t       cross-cutting bug blocks (fixed ones live, unfixed SKIP)
 
 ## How a block runs
 

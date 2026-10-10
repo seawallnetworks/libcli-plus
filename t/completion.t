@@ -82,17 +82,7 @@ paint ?
 
 
 
-=== TEST 9: registering a duplicate optarg leaves a usable cli
---- fixture: dupoptarg
---- input
-set hello
---- output_like
-^RAN set$
-^OPTARG name=hello$
-
-
-
-=== TEST 10: Tab completion near the line-length limit does not overflow (KNOWN BUG libcli.c:1472)
+=== TEST 9: Tab completion near the line-length limit does not overflow (KNOWN BUG libcli.c:1472)
 --- SKIP
 --- fixture: completion
 --- input eval
@@ -100,7 +90,7 @@ set hello
 
 
 
-=== TEST 11: a failed buildmode entry does not crash the cli
+=== TEST 10: a failed buildmode entry does not crash the cli
 --- fixture: buildmode
 --- input
 build go
