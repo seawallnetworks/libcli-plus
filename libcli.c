@@ -2221,6 +2221,7 @@ static void cli_optarg_build_shortest(struct cli_optarg *optarg) {
 }
 
 void cli_free_optarg(struct cli_optarg *optarg) {
+  if (!optarg) return;
   free_z(optarg->help);
   free_z(optarg->name);
   free_z(optarg);
