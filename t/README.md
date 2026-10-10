@@ -9,13 +9,11 @@ turn into test failures.
 
 ## Running
 
-    make test            # fast: AddressSanitizer + UndefinedBehaviorSanitizer
-    make test-valgrind   # slower: valgrind/Memcheck (leaks, uninitialized reads)
+    make test            # AddressSanitizer + UndefinedBehaviorSanitizer
 
 `make test` builds `t/cli_driver` with `-fsanitize=address,undefined` and
-runs `prove -r t/`. `make test-valgrind` builds a separate non-sanitized
-driver (`t/cli_driver_plain`, because ASan and valgrind cannot share a
-binary) and runs the same blocks under Memcheck.
+runs `prove -r t/`. The same blocks can also be run under valgrind; see
+[valgrind mode](#valgrind-mode).
 
 Run one file verbosely:
 
@@ -157,7 +155,14 @@ Current known-bug blocks:
 
 ## valgrind mode
 
-`make test-valgrind` runs every block under Memcheck. It catches two
+Set `LIBCLI_VALGRIND=1` to run every block under Memcheck. ASan and
+valgrind cannot share a binary, so build a non-sanitized driver first and
+point `LIBCLI_DRIVER` at it:
+
+    gcc -g -O0 -I. -std=c99 -o t/cli_driver_plain t/cli_driver.c libcli.c -lcrypt
+    LIBCLI_DRIVER=t/cli_driver_plain LIBCLI_VALGRIND=1 prove -r t/
+
+Memcheck catches two
 things the ASan build does not: reads of uninitialized memory, and leaks
 (the ASan build runs with `detect_leaks=0`). Each block's timeout is
 scaled up automatically because Memcheck is ~20–30x slower.
@@ -171,6 +176,6 @@ libcli.c:270).
 
 ## CI
 
-`make test` is suitable for every push (seconds). `make test-valgrind`
+`make test` is suitable for every push (seconds). The valgrind run
 suits a nightly or pre-release job. Both need `libtest-base-perl`;
 valgrind additionally needs the `valgrind` package.
