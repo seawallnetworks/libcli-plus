@@ -247,3 +247,25 @@ bob:ac
 ^RAN show version$
 --- output_unlike
 Access denied
+
+
+
+=== TEST 23: exit is described as leaving the EXEC in exec mode
+--- input
+help
+enable
+configure terminal
+help
+--- output_like
+^  exit\s+Exit from the EXEC$
+^  exit\s+Exit from current mode$
+
+
+
+=== TEST 24: '?' shows the same exit help as help
+--- input
+ex?
+--- output_like
+^  exit\s+Exit from the EXEC$
+--- output_unlike
+current mode

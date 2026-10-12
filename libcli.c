@@ -193,7 +193,7 @@ inline void cli_int_show_pipeline(struct cli_def *cli, struct cli_pipeline *pipe
 static void cli_int_free_pipeline(struct cli_pipeline *pipeline);
 static struct cli_command *cli_register_command_core(struct cli_def *cli, struct cli_command *parent,
                                                      struct cli_command *c);
-static void cli_int_wrap_help_line(char *nameptr, char *helpptr, struct cli_comphelp *comphelp);
+static void cli_int_wrap_help_line(char *nameptr, const char *helpptr, struct cli_comphelp *comphelp);
 static int cli_socket_wait(int sockfd, struct timeval *tm);
 
 static char DELIM_OPT_START[] = "[";
@@ -541,12 +541,20 @@ int cli_unregister_command(struct cli_def *cli, const char *command) {
   return cli_int_unregister_command_core(cli, command, CLI_REGULAR_COMMAND);
 }
 
+// The built-in exit leaves a config mode, but in exec mode it disconnects,
+// as on IOS; say so there
+static const char *cli_int_command_help(struct cli_def *cli, struct cli_command *c) {
+  if (c->callback == cli_exit && cli->mode == MODE_EXEC) return "Exit from the EXEC";
+  return c->help;
+}
+
 int cli_show_help(struct cli_def *cli, struct cli_command *c) {
   struct cli_command *p;
 
   for (p = c; p; p = p->next) {
     if (p->command && p->callback && cli->privilege >= p->privilege && (p->mode == cli->mode || p->mode == MODE_ANY)) {
-      cli_error(cli, "  %-20s %s", cli_command_name(cli, p), (p->help != NULL ? p->help : ""));
+      const char *help = cli_int_command_help(cli, p);
+      cli_error(cli, "  %-20s %s", cli_command_name(cli, p), (help != NULL ? help : ""));
     }
 
     if (p->children) cli_show_help(cli, p->children);
@@ -994,7 +1002,7 @@ void cli_get_completions(struct cli_def *cli, const char *command, char lastchar
       }
       if (asprintf(&nameptr, "%s%s%s", delim_start, c->command, delim_end) != -1) {
         if (asprintf(&strptr, "  %s", nameptr) != -1) {
-          cli_int_wrap_help_line(strptr, c->help, comphelp);
+          cli_int_wrap_help_line(strptr, cli_int_command_help(cli, c), comphelp);
           free_z(strptr);
         }
         free(nameptr);
@@ -3315,7 +3323,7 @@ int cli_int_execute_pipeline(struct cli_def *cli, struct cli_pipeline *pipeline)
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MAXWIDTHCOL1 22
 
-void cli_int_wrap_help_line(char *nameptr, char *helpptr, struct cli_comphelp *comphelp) {
+void cli_int_wrap_help_line(char *nameptr, const char *helpptr, struct cli_comphelp *comphelp) {
   int maxwidth = 80;  // temporary assumption, to be fixed later when libcli 'understands' screen dimensions
   int availwidth;
   int namewidth;
