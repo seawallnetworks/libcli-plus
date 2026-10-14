@@ -18,8 +18,13 @@ be used instead.  One additional check is being made now in cli_loop() to
 ensure that the passed file descriptor is in range.  If not, an error message
 will be sent and the cli_loop() will exit in the child process with CLI_ERROR.
 
-This will install `libcli.so` into `/usr/local/lib`. If you want to change the
-location, edit Makefile.
+This installs `libcli.h` into `/usr/local/seawall/include` and `libcli.a`
+into `/usr/local/seawall/lib`, the prefix shared by the Seawall stack, so
+this fork never collides with a distribution's libcli. With
+`DYNAMIC_LIB=1`, `libcli.so` goes there too; that directory is not on the
+dynamic linker's path (sw_configd links `libcli.a`). `PREFIX` and
+`DESTDIR` change the location, e.g. `make install PREFIX=/usr/local`, and
+`make uninstall` removes the files again.
 
 There is a test application built called clitest. Run this and telnet to port
 8000.

@@ -4,7 +4,8 @@ DYNAMIC_LIB ?= 0
 USE_ASAN ?=
 
 DESTDIR =
-PREFIX = /usr/local
+# shared by the Seawall stack (sw_authd, sw_configd, mini-fw)
+PREFIX = /usr/local/seawall
 
 MAJOR = 1
 MINOR = 10
@@ -75,4 +76,11 @@ ifeq (1,$(DYNAMIC_LIB))
 	    ln -fs $(LIB).$(MAJOR).$(MINOR) $(LIB)
 endif
 
-.PHONY: all test lint clean install
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/include/libcli.h \
+	    $(DESTDIR)$(PREFIX)/lib/$(LIB_STATIC) \
+	    $(DESTDIR)$(PREFIX)/lib/$(LIB) \
+	    $(DESTDIR)$(PREFIX)/lib/$(LIB).$(MAJOR).$(MINOR) \
+	    $(DESTDIR)$(PREFIX)/lib/$(LIB).$(MAJOR).$(MINOR).$(REVISION)
+
+.PHONY: all test lint clean install uninstall
